@@ -1,8 +1,3 @@
-import { Router, type IRouter } from "express";
-import healthRouter from "./health";
-
-const router: IRouter = Router();
-
-router.use(healthRouter);
-
-export default router;
+// Routes are now mounted directly in app.ts for cleaner semantics.
+// This file is kept as a placeholder for future route expansion.
+export {};
