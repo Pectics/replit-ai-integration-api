@@ -196,6 +196,7 @@ const GEMINI_SUPPORTED_ENDPOINTS = [
 const OPENROUTER_SUPPORTED_ENDPOINTS = [
   "POST /openrouter/chat/completions",
   "GET  /openrouter/models",
+  "GET  /openrouter/api/v1/models",
 ];
 
 const UNSUPPORTED_RULES: Record<string, NotSupportedRule[]> = {
@@ -236,7 +237,9 @@ const UNSUPPORTED_RULES: Record<string, NotSupportedRule[]> = {
   ],
   gemini: [
     {
-      pattern: /embed/i,
+      // Match explicit Gemini embed action paths: /models/{model}:embedContent
+      // or /models/{model}:batchEmbedContents (and similar variants).
+      pattern: /\/models\/[^/:]+:(?:embed|batchEmbed)/i,
       message:
         "Gemini Embeddings API is not supported by Replit AI Integrations. Use generateContent for text tasks.",
     },
@@ -333,7 +336,9 @@ function createProviderRouter(providerName: string): IRouter {
   // /chat/completions are forwarded to the modelfarm as /chat/completions.
   if (providerName === "openai") {
     router.use((req, _res, next) => {
-      if (req.url.startsWith("/v1")) {
+      // Strip /v1 only as an exact path segment (e.g. /v1/foo → /foo, /v1 → /)
+      // Avoids mangling paths that happen to start with /v1 but aren't a segment.
+      if (req.url === "/v1" || req.url.startsWith("/v1/")) {
         req.url = req.url.slice(3) || "/";
       }
       next();
