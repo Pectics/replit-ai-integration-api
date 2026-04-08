@@ -13,9 +13,10 @@ router.get("/models", (_req: Request, res: Response): void => {
 });
 
 router.get("/models/:modelId", (req: Request, res: Response): void => {
-  const model = findOpenAIModel(req.params.modelId);
+  const modelId = String(req.params.modelId);
+  const model = findOpenAIModel(modelId);
   if (!model) {
-    res.status(404).json({ error: { message: `Model '${req.params.modelId}' not found`, type: "invalid_request_error", code: "model_not_found" } });
+    res.status(404).json({ error: { message: `Model '${modelId}' not found`, type: "invalid_request_error", code: "model_not_found" } });
     return;
   }
   res.json(model);

@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { requireProxyAuth, notImplemented, proxyRequest } from "./proxy";
+import { requireProxyAuth, notImplemented, proxyRequest, probeAndProxy } from "./proxy";
 import { ANTHROPIC_MODELS, findAnthropicModel } from "./model-catalogs";
 
 const router: IRouter = Router();
@@ -18,13 +18,18 @@ router.get("/v1/models", (_req: Request, res: Response): void => {
 });
 
 router.get("/v1/models/:modelId", (req: Request, res: Response): void => {
-  const model = findAnthropicModel(req.params.modelId);
+  const modelId = String(req.params.modelId);
+  const model = findAnthropicModel(modelId);
   if (!model) {
-    res.status(404).json({ type: "error", error: { type: "not_found_error", message: `Model '${req.params.modelId}' not found` } });
+    res.status(404).json({ type: "error", error: { type: "not_found_error", message: `Model '${modelId}' not found` } });
     return;
   }
   res.json(model);
 });
+
+router.post("/v1/messages/count_tokens", (req: Request, res: Response) =>
+  probeAndProxy(req, res, "anthropic", `${NOT_SUPPORTED} (count_tokens is not supported by this integration)`),
+);
 
 router.all("/v1/messages/batches", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
 router.all("/v1/messages/batches/:batchId", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));

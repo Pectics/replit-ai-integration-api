@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { requireProxyAuth, notImplemented, proxyRequest } from "./proxy";
+import { requireProxyAuth, notImplemented, proxyRequest, probeAndProxy } from "./proxy";
 import { GEMINI_MODELS, findGeminiModel } from "./model-catalogs";
 
 const router: IRouter = Router();
@@ -14,23 +14,29 @@ router.get("/models", (_req: Request, res: Response): void => {
   res.json({ models: GEMINI_MODELS });
 });
 
-router.get("/models/:modelId", (req: Request, res: Response): void => {
-  const model = findGeminiModel(req.params.modelId);
+router.get(/^\/models\/(.+)$/, (req: Request, res: Response): void => {
+  const rawId = String(req.params[0]);
+  const normalizedId = rawId.replace(/^models\//, "");
+  const model = findGeminiModel(normalizedId);
   if (!model) {
-    res.status(404).json({ error: { code: 404, message: `Model '${req.params.modelId}' not found`, status: "NOT_FOUND" } });
+    res.status(404).json({ error: { code: 404, message: `Model '${rawId}' not found`, status: "NOT_FOUND" } });
     return;
   }
   res.json(model);
 });
 
 router.post("/models/:modelAndAction", (req: Request, res: Response) => {
-  const { modelAndAction } = req.params;
+  const modelAndAction = String(req.params.modelAndAction);
   const colonIdx = modelAndAction.lastIndexOf(":");
   const action = colonIdx >= 0 ? modelAndAction.slice(colonIdx + 1) : "";
 
   if (BLOCKED_ACTIONS.has(action)) {
     notImplemented(`${NOT_SUPPORTED} (${action} / embeddings are not supported)`)(req, res);
     return;
+  }
+
+  if (action === "countTokens") {
+    return probeAndProxy(req, res, "gemini", `${NOT_SUPPORTED} (countTokens is not supported by this integration)`);
   }
 
   return proxyRequest(req, res, "gemini");

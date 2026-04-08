@@ -70,6 +70,79 @@ export function notImplemented(reason: string) {
   };
 }
 
+/**
+ * Try to proxy the request upstream. If the upstream returns 404 (endpoint not
+ * found) or a network error occurs, fall back to a 501 Not Implemented response
+ * with the provided message. All other upstream status codes are forwarded verbatim.
+ */
+export async function probeAndProxy(
+  req: Request,
+  res: Response,
+  providerName: string,
+  notSupportedMessage: string,
+): Promise<void> {
+  const config = PROVIDERS[providerName];
+  const baseUrl = process.env[config.baseUrlEnv];
+  const apiKey = process.env[config.apiKeyEnv];
+
+  if (!baseUrl || !apiKey) {
+    res.status(500).json({ error: `Provider ${providerName} is not configured` });
+    return;
+  }
+
+  const upstreamUrl = baseUrl.replace(/\/$/, "") + req.url;
+  const upstreamHeaders: Record<string, string> = {};
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (!HOP_BY_HOP.has(key.toLowerCase()) && typeof value === "string") {
+      upstreamHeaders[key] = value;
+    }
+  }
+  delete upstreamHeaders["authorization"];
+  delete upstreamHeaders["x-api-key"];
+  delete upstreamHeaders["x-goog-api-key"];
+  Object.assign(upstreamHeaders, config.authHeaders(apiKey));
+  upstreamHeaders["accept-encoding"] = "identity";
+
+  const method = (req.method ?? "GET").toUpperCase();
+  const hasBody = !["GET", "HEAD"].includes(method);
+  const bodyBuffer: Buffer | undefined =
+    hasBody && req.body instanceof Buffer && req.body.length > 0 ? req.body : undefined;
+
+  try {
+    const upstream = await fetch(upstreamUrl, { method, headers: upstreamHeaders, body: bodyBuffer });
+
+    if (upstream.status === 404) {
+      res.status(501).json({ error: "Not Implemented", message: notSupportedMessage });
+      return;
+    }
+
+    if (upstream.status === 400) {
+      const text = await upstream.text();
+      if (text.includes("INVALID_ENDPOINT")) {
+        res.status(501).json({ error: "Not Implemented", message: notSupportedMessage });
+        return;
+      }
+      res.status(400);
+      for (const [key, value] of upstream.headers.entries()) {
+        if (!HOP_BY_HOP.has(key.toLowerCase())) res.setHeader(key, value);
+      }
+      res.end(text);
+      return;
+    }
+
+    res.status(upstream.status);
+    for (const [key, value] of upstream.headers.entries()) {
+      if (!HOP_BY_HOP.has(key.toLowerCase())) {
+        res.setHeader(key, value);
+      }
+    }
+    if (!upstream.body) { res.end(); return; }
+    Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>).pipe(res);
+  } catch (_err) {
+    res.status(501).json({ error: "Not Implemented", message: notSupportedMessage });
+  }
+}
+
 export async function proxyRequest(
   req: Request,
   res: Response,
