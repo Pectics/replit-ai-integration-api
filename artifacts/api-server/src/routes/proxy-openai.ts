@@ -24,7 +24,6 @@ router.get("/models/:modelId", (req: Request, res: Response): void => {
 
 router.post("/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
 router.post("/audio/speech", notImplemented(`${NOT_SUPPORTED} (TTS / speech output is not supported)`));
-router.post("/audio/transcriptions", notImplemented(`${NOT_SUPPORTED} (audio transcriptions are not supported)`));
 router.post("/audio/translations", notImplemented(`${NOT_SUPPORTED} (audio translations are not supported)`));
 router.post("/images/variations", notImplemented(`${NOT_SUPPORTED} (image variations are not supported)`));
 router.post("/moderations", notImplemented(`${NOT_SUPPORTED} (moderations are not supported)`));
