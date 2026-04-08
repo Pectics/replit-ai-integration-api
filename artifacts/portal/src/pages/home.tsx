@@ -96,6 +96,7 @@ export default function Home() {
 
   const isHealthy = health?.status === "ok";
   const isOffline = health?.status === "offline" || health?.status === "degraded";
+  const proxyBase = typeof window !== "undefined" ? window.location.origin : "<YOUR_PROXY_BASE>";
 
   if (!loading && !info) {
     return (
@@ -430,17 +431,17 @@ export default function Home() {
                   </h3>
                   <CodeSnippet 
                     language="typescript"
-                    code={`import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: process.env.PROXY_API_KEY,
-  baseURL: '<YOUR_PROXY_BASE>/openai/v1',
-});
-
-const response = await client.chat.completions.create({
-  model: 'gpt-4o',
-  messages: [{ role: 'user', content: 'Hello!' }],
-});`} 
+                    code={
+                      "import OpenAI from 'openai';\n\n" +
+                      "const client = new OpenAI({\n" +
+                      "  apiKey: process.env.PROXY_API_KEY,\n" +
+                      `  baseURL: '${proxyBase}/openai',\n` +
+                      "});\n\n" +
+                      "const response = await client.chat.completions.create({\n" +
+                      "  model: 'gpt-4o',\n" +
+                      "  messages: [{ role: 'user', content: 'Hello!' }],\n" +
+                      "});"
+                    }
                   />
                 </div>
                 
@@ -451,18 +452,18 @@ const response = await client.chat.completions.create({
                   </h3>
                   <CodeSnippet 
                     language="python"
-                    code={`import anthropic, os
-
-client = anthropic.Anthropic(
-    api_key=os.environ["PROXY_API_KEY"],
-    base_url="<YOUR_PROXY_BASE>/anthropic",
-)
-
-msg = client.messages.create(
-    model="claude-opus-4-5",
-    max_tokens=1024,
-    messages=[{"role": "user", "content": "Hi"}],
-)`} 
+                    code={
+                      "import anthropic, os\n\n" +
+                      "client = anthropic.Anthropic(\n" +
+                      "    api_key=os.environ[\"PROXY_API_KEY\"],\n" +
+                      `    base_url="${proxyBase}/anthropic",\n` +
+                      ")\n\n" +
+                      "msg = client.messages.create(\n" +
+                      "    model=\"claude-opus-4-5\",\n" +
+                      "    max_tokens=1024,\n" +
+                      "    messages=[{\"role\": \"user\", \"content\": \"Hi\"}],\n" +
+                      ")"
+                    }
                   />
                 </div>
 
@@ -473,18 +474,18 @@ msg = client.messages.create(
                   </h3>
                   <CodeSnippet 
                     language="python"
-                    code={`import google.generativeai as genai
-import os
-
-genai.configure(
-    api_key=os.environ["PROXY_API_KEY"],
-    client_options={
-        "api_endpoint": "<YOUR_PROXY_BASE>/gemini",
-    },
-)
-
-model = genai.GenerativeModel("gemini-2.5-flash")
-response = model.generate_content("Hello!")`}
+                    code={
+                      "import google.generativeai as genai\n" +
+                      "import os\n\n" +
+                      "genai.configure(\n" +
+                      "    api_key=os.environ[\"PROXY_API_KEY\"],\n" +
+                      "    client_options={\n" +
+                      `        \"api_endpoint\": \"${proxyBase}/gemini\",\n` +
+                      "    },\n" +
+                      ")\n\n" +
+                      "model = genai.GenerativeModel(\"gemini-2.5-flash\")\n" +
+                      "response = model.generate_content(\"Hello!\")"
+                    }
                   />
                 </div>
 
@@ -495,17 +496,17 @@ response = model.generate_content("Hello!")`}
                   </h3>
                   <CodeSnippet 
                     language="typescript"
-                    code={`import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: process.env.PROXY_API_KEY,
-  baseURL: '<YOUR_PROXY_BASE>/openrouter/api/v1',
-});
-
-const response = await client.chat.completions.create({
-  model: 'meta-llama/llama-3.3-70b-instruct',
-  messages: [{ role: 'user', content: 'Hello!' }],
-});`}
+                    code={
+                      "import OpenAI from 'openai';\n\n" +
+                      "const client = new OpenAI({\n" +
+                      "  apiKey: process.env.PROXY_API_KEY,\n" +
+                      `  baseURL: '${proxyBase}/openrouter',\n` +
+                      "});\n\n" +
+                      "const response = await client.chat.completions.create({\n" +
+                      "  model: 'meta-llama/llama-3.3-70b-instruct',\n" +
+                      "  messages: [{ role: 'user', content: 'Hello!' }],\n" +
+                      "});"
+                    }
                   />
                 </div>
               </div>
