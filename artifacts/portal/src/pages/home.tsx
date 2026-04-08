@@ -77,7 +77,7 @@ function FadeIn({ children, delay = 0, className = "" }: { children: React.React
 }
 
 export default function Home() {
-  const { health, info, loading } = useProxyData();
+  const { health, info, loading, error } = useProxyData();
 
   if (loading) {
     return (
