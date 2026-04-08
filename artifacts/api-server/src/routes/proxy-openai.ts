@@ -36,6 +36,12 @@ router.all(/^\/threads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Threads API i
 router.all(/^\/vector_stores(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Vector Stores API is not supported)`));
 router.all(/^\/uploads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (uploads API is not supported)`));
 
+router.post("/chat/completions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/completions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/responses", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/audio/transcriptions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/images/generations", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "openai"));
 
 export default router;

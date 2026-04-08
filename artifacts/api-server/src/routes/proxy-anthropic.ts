@@ -35,6 +35,9 @@ router.all(/^\/v1\/messages\/batches(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} 
 router.all(/^\/v1\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
 router.all(/^\/v1\/admin(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Admin API is not supported)`));
 
+router.post("/v1/messages", (req: Request, res: Response) => proxyRequest(req, res, "anthropic"));
+router.post("/v1/complete", (req: Request, res: Response) => proxyRequest(req, res, "anthropic"));
+
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "anthropic"));
 
 export default router;

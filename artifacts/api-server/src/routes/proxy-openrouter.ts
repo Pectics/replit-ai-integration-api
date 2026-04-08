@@ -20,6 +20,8 @@ router.get("/generation", notImplemented(`${NOT_SUPPORTED} (generation tracking 
 router.get("/credits", notImplemented(`${NOT_SUPPORTED} (credits endpoint is not supported)`));
 router.all(/^\/auth(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (auth endpoint is not supported)`));
 
+router.post("/chat/completions", (req: Request, res: Response) => proxyRequest(req, res, "openrouter"));
+
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "openrouter"));
 
 export default router;
