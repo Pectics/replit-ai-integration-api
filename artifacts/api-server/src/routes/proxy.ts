@@ -68,7 +68,7 @@ function createProviderRouter(providerName: string): IRouter {
 
   router.use(requireProxyAuth);
 
-  router.all("*", async (req: Request, res: Response): Promise<void> => {
+  router.all(/(.*)/, async (req: Request, res: Response): Promise<void> => {
     const baseUrl = process.env[config.baseUrlEnv];
     const apiKey = process.env[config.apiKeyEnv];
 
