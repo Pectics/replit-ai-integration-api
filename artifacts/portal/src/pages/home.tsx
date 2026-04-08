@@ -1,7 +1,6 @@
 import { useProxyData } from "@/hooks/use-proxy-data";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Copy, Terminal, Key, Cpu, Zap, Activity, CheckCircle, XCircle, Shield, Globe, Layers, ArrowRight, BookOpen, Code2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
@@ -95,20 +94,19 @@ export default function Home() {
     );
   }
 
-  // Fallback for styling if not running in the real environment
-  const displayInfo = info || {
-    description: "A transparent proxy for OpenAI, Anthropic, Gemini, and OpenRouter APIs.",
-    authentication: { header: "Authorization", scheme: "Bearer <PROXY_API_KEY>", note: "Required for all endpoints" },
-    streaming: "Supported via SSE",
-    providers: {
-      openai: { sdkBaseUrl: "/openai", note: "Compatible with official OpenAI SDK", passthrough: ["/v1/chat/completions", "/v1/embeddings"], fakeResponse: ["/v1/models"], notImplemented: ["/v1/images/generations"], models: ["gpt-4-turbo", "gpt-4o", "gpt-3.5-turbo", "text-embedding-3-small"] },
-      anthropic: { sdkBaseUrl: "/anthropic", note: "Compatible with official Anthropic SDK", passthrough: ["/v1/messages"], fakeResponse: [], notImplemented: ["/v1/complete"], models: ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"] },
-      gemini: { sdkBaseUrl: "/gemini", note: "Compatible with official Google GenAI SDK", passthrough: ["/v1beta/models"], fakeResponse: [], notImplemented: [], models: ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"] },
-      openrouter: { sdkBaseUrl: "/openrouter", note: "Compatible with OpenAI SDK using OpenRouter base URL", passthrough: ["/api/v1/chat/completions"], fakeResponse: [], notImplemented: [], models: ["meta-llama/llama-3-70b-instruct", "mistralai/mixtral-8x7b-instruct"] }
-    }
-  };
-
   const isHealthy = health?.status === "ok";
+  const isOffline = health?.status === "offline" || health?.status === "degraded";
+
+  if (!loading && !info) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-8 gap-4">
+        <Activity className="h-10 w-10 text-red-500" />
+        <h2 className="text-xl font-semibold">Unable to reach the proxy service</h2>
+        <p className="text-zinc-400 text-sm">Make sure the API server is running and accessible at <code className="font-mono text-zinc-300">/healthz</code> and <code className="font-mono text-zinc-300">/info</code>.</p>
+        {error && <p className="text-red-400 text-sm font-mono">{error}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-primary-foreground overflow-hidden">
@@ -141,12 +139,14 @@ export default function Home() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </>
+                ) : isOffline ? (
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                 ) : (
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-zinc-500"></span>
                 )}
               </span>
-              <span className={isHealthy ? "text-emerald-500 text-xs uppercase tracking-wider" : "text-zinc-400 text-xs uppercase tracking-wider"}>
-                {isHealthy ? "Operational" : "Unknown"}
+              <span className={isHealthy ? "text-emerald-500 text-xs uppercase tracking-wider" : isOffline ? "text-red-400 text-xs uppercase tracking-wider" : "text-zinc-400 text-xs uppercase tracking-wider"}>
+                {isHealthy ? "Operational" : isOffline ? health!.status : "Checking"}
               </span>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function Home() {
             </FadeIn>
             <FadeIn delay={200}>
               <p className="text-xl md:text-2xl text-zinc-400 mb-12 max-w-3xl mx-auto font-light leading-relaxed">
-                {displayInfo.description} Build multi-model applications without juggling keys, managing billing, or rewriting SDK logic.
+                {info!.description} Build multi-model applications without juggling keys, managing billing, or rewriting SDK logic.
               </p>
             </FadeIn>
             <FadeIn delay={300}>
@@ -209,7 +209,7 @@ export default function Home() {
                     <Zap className="h-6 w-6 text-amber-400" />
                   </div>
                   <h3 className="text-xl font-semibold">Full Streaming</h3>
-                  <p className="text-zinc-400 leading-relaxed">First-class support for Server-Sent Events (SSE). {displayInfo.streaming}. Zero added latency to your token generation.</p>
+                  <p className="text-zinc-400 leading-relaxed">First-class support for Server-Sent Events (SSE). {info!.streaming}. Zero added latency to your token generation.</p>
                 </div>
               </div>
             </FadeIn>
@@ -290,18 +290,18 @@ export default function Home() {
                 </div>
                 <h2 className="text-2xl font-bold">Global Authentication</h2>
               </div>
-              <p className="text-zinc-400 mb-8 max-w-2xl">{displayInfo.authentication.note}. Use this exact scheme across all supported providers regardless of their native authentication requirements.</p>
+              <p className="text-zinc-400 mb-8 max-w-2xl">{info!.authentication.note}. Use this exact scheme across all supported providers regardless of their native authentication requirements.</p>
               
               <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden max-w-3xl">
                 <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
                   <div className="p-6">
                     <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-2">Header Name</div>
-                    <div className="font-mono text-zinc-200">{displayInfo.authentication.header}</div>
+                    <div className="font-mono text-zinc-200">{info!.authentication.header}</div>
                   </div>
                   <div className="p-6 sm:col-span-2">
                     <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold mb-2">Header Value format</div>
                     <div className="font-mono text-primary flex items-center gap-2">
-                      {displayInfo.authentication.scheme}
+                      {info!.authentication.scheme}
                     </div>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export default function Home() {
             </FadeIn>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {Object.entries(displayInfo.providers).map(([id, provider], index) => (
+              {Object.entries(info!.providers).map(([id, provider], index) => (
                 <FadeIn key={id} delay={index * 100}>
                   <Card className="bg-zinc-900/40 border-zinc-800/80 overflow-hidden h-full flex flex-col hover:border-zinc-700 transition-colors duration-300">
                     <div className="p-8 border-b border-zinc-800/50 bg-gradient-to-b from-zinc-900/80 to-transparent">
