@@ -34,8 +34,8 @@ router.get("/info", (_req, res) => {
           "POST /openai/audio/transcriptions",
           "POST /openai/responses",
         ],
-        note: "The modelfarm path does not include a /v1 prefix. Configure the OpenAI SDK baseURL as '/openai' (not '/openai/v1').",
-        models: ["gpt-5.2", "gpt-5-nano", "gpt-5-mini", "gpt-image-1", "gpt-4o-mini-transcribe", "o4-mini", "o3"],
+        note: "The modelfarm path does not include a /v1 prefix. Configure the OpenAI SDK baseURL as '/openai' (not '/openai/v1'). Reasoning models (gpt-5-nano, o4-mini, o3) consume tokens for internal thought — use max_completion_tokens ≥ 200 or prefer gpt-4o-mini for general use.",
+        models: ["gpt-4o-mini", "gpt-5-nano", "gpt-5-mini", "gpt-5.2", "gpt-image-1", "gpt-4o-mini-transcribe", "o4-mini", "o3"],
       },
       anthropic: {
         sdkBaseUrl: "/anthropic",
@@ -51,7 +51,7 @@ router.get("/info", (_req, res) => {
           "POST /gemini/models/{model}:generateContent",
           "POST /gemini/models/{model}:streamGenerateContent",
         ],
-        note: "No version prefix in path. Use model names exactly as listed.",
+        note: "No version prefix in path. Use model names exactly as listed. gemini-2.5-flash is a thinking model — set maxOutputTokens ≥ 1024 to leave room for the response after internal thought tokens.",
         models: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-3-flash-preview", "gemini-2.5-flash-image"],
       },
       openrouter: {

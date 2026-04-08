@@ -94,6 +94,9 @@ function createProviderRouter(providerName: string): IRouter {
     delete upstreamHeaders["x-api-key"];
     delete upstreamHeaders["x-goog-api-key"];
     Object.assign(upstreamHeaders, config.authHeaders(apiKey));
+    // Force no compression from upstream — gzip responses corrupt when double-decoded
+    // through the Replit reverse proxy layer. Always request plain bytes.
+    upstreamHeaders["accept-encoding"] = "identity";
 
     const method = (req.method ?? "GET").toUpperCase();
     const hasBody = !["GET", "HEAD"].includes(method);
