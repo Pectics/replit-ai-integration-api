@@ -426,7 +426,7 @@ export default function Home() {
                 <div>
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    OpenAI Node.js SDK
+                    OpenAI — Node.js SDK
                   </h3>
                   <CodeSnippet 
                     language="typescript"
@@ -434,7 +434,7 @@ export default function Home() {
 
 const client = new OpenAI({
   apiKey: process.env.PROXY_API_KEY,
-  baseURL: 'https://proxy.replit.com/openai/v1',
+  baseURL: '<YOUR_PROXY_BASE>/openai/v1',
 });
 
 const response = await client.chat.completions.create({
@@ -447,27 +447,65 @@ const response = await client.chat.completions.create({
                 <div>
                   <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    Python Requests
+                    Anthropic — Python SDK
                   </h3>
                   <CodeSnippet 
                     language="python"
-                    code={`import requests
+                    code={`import anthropic, os
+
+client = anthropic.Anthropic(
+    api_key=os.environ["PROXY_API_KEY"],
+    base_url="<YOUR_PROXY_BASE>/anthropic",
+)
+
+msg = client.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hi"}],
+)`} 
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                    Gemini — Python SDK
+                  </h3>
+                  <CodeSnippet 
+                    language="python"
+                    code={`import google.generativeai as genai
 import os
 
-headers = {
-    "Authorization": f"Bearer {os.environ['PROXY_API_KEY']}",
-    "Content-Type": "application/json"
-}
+genai.configure(
+    api_key=os.environ["PROXY_API_KEY"],
+    client_options={
+        "api_endpoint": "<YOUR_PROXY_BASE>/gemini",
+    },
+)
 
-res = requests.post(
-    "https://proxy.replit.com/anthropic/v1/messages",
-    headers=headers,
-    json={
-        "model": "claude-3-opus-20240229",
-        "max_tokens": 1024,
-        "messages": [{"role": "user", "content": "Hi"}]
-    }
-)`} 
+model = genai.GenerativeModel("gemini-2.5-flash")
+response = model.generate_content("Hello!")`}
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                    OpenRouter — OpenAI-compatible SDK
+                  </h3>
+                  <CodeSnippet 
+                    language="typescript"
+                    code={`import OpenAI from 'openai';
+
+const client = new OpenAI({
+  apiKey: process.env.PROXY_API_KEY,
+  baseURL: '<YOUR_PROXY_BASE>/openrouter/api/v1',
+});
+
+const response = await client.chat.completions.create({
+  model: 'meta-llama/llama-3.3-70b-instruct',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});`}
                   />
                 </div>
               </div>

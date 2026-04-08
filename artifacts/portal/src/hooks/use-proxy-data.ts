@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 export type HealthResponse = {
   status: string;
@@ -10,7 +10,7 @@ export type ProviderInfo = {
   passthrough: string[];
   fakeResponse: string[];
   notImplemented: string[];
-  models: string[];
+  models: string[] | string;
 };
 
 export type ProxyInfoResponse = {
@@ -29,43 +29,59 @@ export type ProxyInfoResponse = {
   };
 };
 
+const POLL_INTERVAL_MS = 10_000;
+
 export function useProxyData() {
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [info, setInfo] = useState<ProxyInfoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
-    async function fetchData() {
+    async function fetchHealth() {
       try {
-        setLoading(true);
-        const [healthRes, infoRes] = await Promise.all([
-          fetch("/healthz").catch(() => null),
-          fetch("/info").catch(() => null)
-        ]);
-
-        if (healthRes && healthRes.ok) {
-          const healthData = await healthRes.json();
-          if (mounted) setHealth(healthData);
+        const res = await fetch("/healthz");
+        if (!mountedRef.current) return;
+        if (res.ok) {
+          const data = await res.json();
+          if (mountedRef.current) setHealth(data);
+        } else {
+          if (mountedRef.current) setHealth({ status: "degraded" });
         }
-
-        if (infoRes && infoRes.ok) {
-          const infoData = await infoRes.json();
-          if (mounted) setInfo(infoData);
-        }
-      } catch (err) {
-        if (mounted) setError(err instanceof Error ? err.message : "Failed to fetch");
-      } finally {
-        if (mounted) setLoading(false);
+      } catch {
+        if (mountedRef.current) setHealth({ status: "offline" });
       }
     }
 
-    fetchData();
+    async function fetchInfo() {
+      try {
+        const res = await fetch("/info");
+        if (!mountedRef.current) return;
+        if (res.ok) {
+          const data = await res.json();
+          if (mountedRef.current) setInfo(data);
+        }
+      } catch (err) {
+        if (mountedRef.current) setError(err instanceof Error ? err.message : "Failed to fetch");
+      }
+    }
+
+    async function initialFetch() {
+      setLoading(true);
+      await Promise.all([fetchHealth(), fetchInfo()]);
+      if (mountedRef.current) setLoading(false);
+    }
+
+    initialFetch();
+
+    const intervalId = setInterval(fetchHealth, POLL_INTERVAL_MS);
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
+      clearInterval(intervalId);
     };
   }, []);
 
