@@ -1,0 +1,42 @@
+import { Router, type IRouter, type Request, type Response } from "express";
+import { requireProxyAuth, notImplemented, proxyRequest } from "./proxy";
+import { ANTHROPIC_MODELS, findAnthropicModel } from "./model-catalogs";
+
+const router: IRouter = Router();
+router.use(requireProxyAuth);
+
+const NOT_SUPPORTED =
+  "This capability is not available through Replit AI Integrations for Anthropic. See /info for supported endpoints.";
+
+router.get("/v1/models", (_req: Request, res: Response): void => {
+  res.json({
+    data: ANTHROPIC_MODELS,
+    has_more: false,
+    first_id: ANTHROPIC_MODELS[0]?.id ?? null,
+    last_id: ANTHROPIC_MODELS[ANTHROPIC_MODELS.length - 1]?.id ?? null,
+  });
+});
+
+router.get("/v1/models/:modelId", (req: Request, res: Response): void => {
+  const model = findAnthropicModel(req.params.modelId);
+  if (!model) {
+    res.status(404).json({ type: "error", error: { type: "not_found_error", message: `Model '${req.params.modelId}' not found` } });
+    return;
+  }
+  res.json(model);
+});
+
+router.all("/v1/messages/batches", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
+router.all("/v1/messages/batches/:batchId", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
+router.all("/v1/messages/batches/:batchId/results", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
+
+router.all("/v1/files", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all("/v1/files/:fileId", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all("/v1/files/:fileId/content", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all("/v1/files/:fileId/metadata", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+
+router.all("/v1/admin/:any", notImplemented(`${NOT_SUPPORTED} (Admin API is not supported)`));
+
+router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "anthropic"));
+
+export default router;

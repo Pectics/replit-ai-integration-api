@@ -1,9 +1,8 @@
-import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { type Request, type Response, type NextFunction } from "express";
 import { Readable } from "node:stream";
 import type { ReadableStream as WebReadableStream } from "node:stream/web";
-import { logger } from "../lib/logger";
 
-const HOP_BY_HOP = new Set([
+export const HOP_BY_HOP = new Set([
   "connection",
   "keep-alive",
   "proxy-authenticate",
@@ -16,27 +15,13 @@ const HOP_BY_HOP = new Set([
   "content-length",
 ]);
 
-function requireProxyAuth(req: Request, res: Response, next: NextFunction): void {
-  const proxyKey = process.env.PROXY_API_KEY;
-  if (!proxyKey) {
-    res.status(500).json({ error: "PROXY_API_KEY is not configured on the server" });
-    return;
-  }
-  const auth = req.headers["authorization"];
-  if (!auth || auth !== `Bearer ${proxyKey}`) {
-    res.status(401).json({ error: "Unauthorized: invalid or missing Bearer token" });
-    return;
-  }
-  next();
-}
-
-interface ProviderConfig {
+export interface ProviderConfig {
   baseUrlEnv: string;
   apiKeyEnv: string;
   authHeaders: (apiKey: string) => Record<string, string>;
 }
 
-const PROVIDERS: Record<string, ProviderConfig> = {
+export const PROVIDERS: Record<string, ProviderConfig> = {
   openai: {
     baseUrlEnv: "AI_INTEGRATIONS_OPENAI_BASE_URL",
     apiKeyEnv: "AI_INTEGRATIONS_OPENAI_API_KEY",
@@ -62,87 +47,84 @@ const PROVIDERS: Record<string, ProviderConfig> = {
   },
 };
 
-function createProviderRouter(providerName: string): IRouter {
+export function requireProxyAuth(req: Request, res: Response, next: NextFunction): void {
+  const proxyKey = process.env.PROXY_API_KEY;
+  if (!proxyKey) {
+    res.status(500).json({ error: "PROXY_API_KEY is not configured on the server" });
+    return;
+  }
+  const auth = req.headers["authorization"];
+  if (!auth || auth !== `Bearer ${proxyKey}`) {
+    res.status(401).json({ error: "Unauthorized: invalid or missing Bearer token" });
+    return;
+  }
+  next();
+}
+
+export function notImplemented(reason: string) {
+  return (_req: Request, res: Response): void => {
+    res.status(501).json({
+      error: "Not Implemented",
+      message: reason,
+    });
+  };
+}
+
+export async function proxyRequest(
+  req: Request,
+  res: Response,
+  providerName: string,
+): Promise<void> {
   const config = PROVIDERS[providerName];
-  const router: IRouter = Router();
+  const baseUrl = process.env[config.baseUrlEnv];
+  const apiKey = process.env[config.apiKeyEnv];
 
-  router.use(requireProxyAuth);
+  if (!baseUrl || !apiKey) {
+    res.status(500).json({
+      error: `Provider ${providerName} is not configured (missing ${config.baseUrlEnv} or ${config.apiKeyEnv})`,
+    });
+    return;
+  }
 
-  router.all(/(.*)/, async (req: Request, res: Response): Promise<void> => {
-    const baseUrl = process.env[config.baseUrlEnv];
-    const apiKey = process.env[config.apiKeyEnv];
+  const upstreamUrl = baseUrl.replace(/\/$/, "") + req.url;
 
-    if (!baseUrl || !apiKey) {
-      res.status(500).json({
-        error: `Provider ${providerName} is not configured (missing ${config.baseUrlEnv} or ${config.apiKeyEnv})`,
-      });
+  const upstreamHeaders: Record<string, string> = {};
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (!HOP_BY_HOP.has(key.toLowerCase()) && typeof value === "string") {
+      upstreamHeaders[key] = value;
+    }
+  }
+  delete upstreamHeaders["authorization"];
+  delete upstreamHeaders["x-api-key"];
+  delete upstreamHeaders["x-goog-api-key"];
+  Object.assign(upstreamHeaders, config.authHeaders(apiKey));
+  upstreamHeaders["accept-encoding"] = "identity";
+
+  const method = (req.method ?? "GET").toUpperCase();
+  const hasBody = !["GET", "HEAD"].includes(method);
+  const bodyBuffer: Buffer | undefined =
+    hasBody && req.body instanceof Buffer && req.body.length > 0 ? req.body : undefined;
+
+  try {
+    const upstream = await fetch(upstreamUrl, { method, headers: upstreamHeaders, body: bodyBuffer });
+
+    res.status(upstream.status);
+    for (const [key, value] of upstream.headers.entries()) {
+      if (!HOP_BY_HOP.has(key.toLowerCase())) {
+        res.setHeader(key, value);
+      }
+    }
+
+    if (!upstream.body) {
+      res.end();
       return;
     }
 
-    // Build upstream URL: strip leading slash from req.url and append to baseUrl
-    const upstreamUrl = baseUrl.replace(/\/$/, "") + req.url;
-
-    // Build upstream headers: forward client headers, filter hop-by-hop, inject provider auth
-    const upstreamHeaders: Record<string, string> = {};
-    for (const [key, value] of Object.entries(req.headers)) {
-      if (!HOP_BY_HOP.has(key.toLowerCase()) && typeof value === "string") {
-        upstreamHeaders[key] = value;
-      }
+    Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>).pipe(res);
+  } catch (err) {
+    req.log.error({ err, provider: providerName }, "Proxy upstream error");
+    if (!res.headersSent) {
+      res.status(502).json({ error: "Bad gateway: upstream request failed" });
     }
-    // Remove caller's Authorization header, then inject provider-specific auth
-    delete upstreamHeaders["authorization"];
-    delete upstreamHeaders["x-api-key"];
-    delete upstreamHeaders["x-goog-api-key"];
-    Object.assign(upstreamHeaders, config.authHeaders(apiKey));
-    // Force no compression from upstream — gzip responses corrupt when double-decoded
-    // through the Replit reverse proxy layer. Always request plain bytes.
-    upstreamHeaders["accept-encoding"] = "identity";
-
-    const method = (req.method ?? "GET").toUpperCase();
-    const hasBody = !["GET", "HEAD"].includes(method);
-
-    // req.body is a Buffer set by express.raw() middleware
-    const bodyBuffer: Buffer | undefined =
-      hasBody && req.body instanceof Buffer && req.body.length > 0
-        ? req.body
-        : undefined;
-
-    try {
-      const upstream = await fetch(upstreamUrl, {
-        method,
-        headers: upstreamHeaders,
-        body: bodyBuffer,
-      });
-
-      // Forward status code
-      res.status(upstream.status);
-
-      // Forward response headers (filter hop-by-hop)
-      for (const [key, value] of upstream.headers.entries()) {
-        if (!HOP_BY_HOP.has(key.toLowerCase())) {
-          res.setHeader(key, value);
-        }
-      }
-
-      if (!upstream.body) {
-        res.end();
-        return;
-      }
-
-      // Pipe response body to client without buffering (supports SSE and chunked streaming)
-      Readable.fromWeb(upstream.body as WebReadableStream<Uint8Array>).pipe(res);
-    } catch (err) {
-      req.log.error({ err, provider: providerName }, "Proxy upstream error");
-      if (!res.headersSent) {
-        res.status(502).json({ error: "Bad gateway: upstream request failed" });
-      }
-    }
-  });
-
-  return router;
+  }
 }
-
-export const openaiRouter = createProviderRouter("openai");
-export const anthropicRouter = createProviderRouter("anthropic");
-export const geminiRouter = createProviderRouter("gemini");
-export const openrouterRouter = createProviderRouter("openrouter");
