@@ -7,7 +7,7 @@ id = "3B4_FFSkEVBkAeYMFRJ2e"
 [[services]]
 localPort = 8080
 name = "API Server"
-paths = ["/healthz", "/openai", "/anthropic", "/gemini", "/openrouter"]
+paths = ["/healthz", "/info", "/openai", "/anthropic", "/gemini", "/openrouter"]
 
 [services.development]
 run = "pnpm --filter @workspace/api-server run dev"
