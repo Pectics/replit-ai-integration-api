@@ -31,16 +31,9 @@ router.post("/v1/messages/count_tokens", (req: Request, res: Response) =>
   probeAndProxy(req, res, "anthropic", `${NOT_SUPPORTED} (count_tokens is not supported by this integration)`),
 );
 
-router.all("/v1/messages/batches", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
-router.all("/v1/messages/batches/:batchId", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
-router.all("/v1/messages/batches/:batchId/results", notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
-
-router.all("/v1/files", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
-router.all("/v1/files/:fileId", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
-router.all("/v1/files/:fileId/content", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
-router.all("/v1/files/:fileId/metadata", notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
-
-router.all("/v1/admin/:any", notImplemented(`${NOT_SUPPORTED} (Admin API is not supported)`));
+router.all(/^\/v1\/messages\/batches(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
+router.all(/^\/v1\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all(/^\/v1\/admin(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Admin API is not supported)`));
 
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "anthropic"));
 

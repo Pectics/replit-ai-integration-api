@@ -24,37 +24,18 @@ router.get("/models/:modelId", (req: Request, res: Response): void => {
 
 router.post("/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
 router.post("/audio/speech", notImplemented(`${NOT_SUPPORTED} (TTS / speech output is not supported)`));
-router.post("/audio/translations", notImplemented(`${NOT_SUPPORTED} (audio translations are not supported; use /audio/transcriptions instead)`));
-router.post("/images/variations", notImplemented(`${NOT_SUPPORTED} (image variations are not supported; use /images/generations or /images/edits)`));
+router.post("/audio/transcriptions", notImplemented(`${NOT_SUPPORTED} (audio transcriptions are not supported)`));
+router.post("/audio/translations", notImplemented(`${NOT_SUPPORTED} (audio translations are not supported)`));
+router.post("/images/variations", notImplemented(`${NOT_SUPPORTED} (image variations are not supported)`));
 router.post("/moderations", notImplemented(`${NOT_SUPPORTED} (moderations are not supported)`));
 
-router.all("/files", notImplemented(`${NOT_SUPPORTED} (files API is not supported)`));
-router.all("/files/:fileId", notImplemented(`${NOT_SUPPORTED} (files API is not supported)`));
-router.all("/files/:fileId/content", notImplemented(`${NOT_SUPPORTED} (files API is not supported)`));
-
-router.all("/fine_tuning/jobs", notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
-router.all("/fine_tuning/jobs/:jobId", notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
-router.all("/fine_tuning/jobs/:jobId/events", notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
-router.all("/fine_tuning/jobs/:jobId/checkpoints", notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
-
-router.all("/batches", notImplemented(`${NOT_SUPPORTED} (batch API is not supported)`));
-router.all("/batches/:batchId", notImplemented(`${NOT_SUPPORTED} (batch API is not supported)`));
-
-router.all("/assistants", notImplemented(`${NOT_SUPPORTED} (Assistants API is not supported)`));
-router.all("/assistants/:assistantId", notImplemented(`${NOT_SUPPORTED} (Assistants API is not supported)`));
-
-router.all("/threads", notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-router.all("/threads/:threadId", notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-router.all("/threads/:threadId/messages", notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-router.all("/threads/:threadId/messages/:messageId", notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-router.all("/threads/:threadId/runs", notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-router.all("/threads/:threadId/runs/:runId", notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-
-router.all("/vector_stores", notImplemented(`${NOT_SUPPORTED} (Vector Stores API is not supported)`));
-router.all("/vector_stores/:vectorStoreId", notImplemented(`${NOT_SUPPORTED} (Vector Stores API is not supported)`));
-
-router.all("/uploads", notImplemented(`${NOT_SUPPORTED} (uploads API is not supported)`));
-router.all("/uploads/:uploadId", notImplemented(`${NOT_SUPPORTED} (uploads API is not supported)`));
+router.all(/^\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all(/^\/fine_tuning(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
+router.all(/^\/batches(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
+router.all(/^\/assistants(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Assistants API is not supported)`));
+router.all(/^\/threads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
+router.all(/^\/vector_stores(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Vector Stores API is not supported)`));
+router.all(/^\/uploads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (uploads API is not supported)`));
 
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "openai"));
 
