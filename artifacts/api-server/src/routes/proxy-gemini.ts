@@ -16,8 +16,7 @@ router.get("/v1/models", (_req: Request, res: Response): void => {
 
 router.get(/^\/v1\/models\/(.+)$/, (req: Request, res: Response): void => {
   const rawId = String(req.params[0]);
-  const normalizedId = rawId.replace(/^v1\/models\//, "");
-  const model = findGeminiModel(normalizedId);
+  const model = findGeminiModel(rawId);
   if (!model) {
     res.status(404).json({ error: { code: 404, message: `Model '${rawId}' not found`, status: "NOT_FOUND" } });
     return;
