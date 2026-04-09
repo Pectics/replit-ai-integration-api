@@ -3,7 +3,6 @@ import { requireProxyAuth, notImplemented, proxyRequest, probeAndProxy } from ".
 import { GEMINI_MODELS, findGeminiModel } from "./model-catalogs";
 
 const router: IRouter = Router();
-router.use(requireProxyAuth);
 
 const NOT_SUPPORTED =
   "This capability is not available through Replit AI Integrations for Gemini. See /info for supported endpoints.";
@@ -23,6 +22,8 @@ router.get(/^\/v1\/models\/(.+)$/, (req: Request, res: Response): void => {
   }
   res.json(model);
 });
+
+router.use(requireProxyAuth);
 
 router.post("/v1/models/:modelAndAction", (req: Request, res: Response) => {
   const modelAndAction = String(req.params.modelAndAction);

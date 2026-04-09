@@ -3,7 +3,6 @@ import { requireProxyAuth, notImplemented, proxyRequest } from "./proxy";
 import { OPENAI_MODELS, findOpenAIModel } from "./model-catalogs";
 
 const router: IRouter = Router();
-router.use(requireProxyAuth);
 
 const NOT_SUPPORTED =
   "This capability is not available through Replit AI Integrations for OpenAI. See /info for supported endpoints.";
@@ -21,6 +20,8 @@ router.get("/v1/models/:modelId", (req: Request, res: Response): void => {
   }
   res.json(model);
 });
+
+router.use(requireProxyAuth);
 
 router.post("/v1/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
 router.post("/v1/audio/speech", notImplemented(`${NOT_SUPPORTED} (TTS / speech output is not supported)`));

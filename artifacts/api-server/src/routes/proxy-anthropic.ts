@@ -3,7 +3,6 @@ import { requireProxyAuth, notImplemented, proxyRequest, probeAndProxy } from ".
 import { ANTHROPIC_MODELS, findAnthropicModel } from "./model-catalogs";
 
 const router: IRouter = Router();
-router.use(requireProxyAuth);
 
 const NOT_SUPPORTED =
   "This capability is not available through Replit AI Integrations for Anthropic. See /info for supported endpoints.";
@@ -26,6 +25,8 @@ router.get("/v1/models/:modelId", (req: Request, res: Response): void => {
   }
   res.json(model);
 });
+
+router.use(requireProxyAuth);
 
 router.post("/v1/messages/count_tokens", (req: Request, res: Response) =>
   probeAndProxy(req, res, "anthropic", `${NOT_SUPPORTED} (count_tokens is not supported by this integration)`),
