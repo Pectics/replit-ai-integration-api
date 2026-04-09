@@ -9,7 +9,7 @@ id = "artifacts/mockup-sandbox"
 [deployment]
 router = "application"
 deploymentTarget = "autoscale"
-build = ["sh", "-c", "pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/portal run build"]
+build = ["sh", "-c", "PORT=3000 BASE_PATH=/ pnpm --filter @workspace/portal run build && pnpm --filter @workspace/api-server run build"]
 run = ["sh", "-c", "PORT=8080 NODE_ENV=production node --enable-source-maps artifacts/api-server/dist/index.mjs"]
 
 [deployment.postBuild]
