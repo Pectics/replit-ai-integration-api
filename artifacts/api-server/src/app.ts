@@ -36,7 +36,7 @@ app.use(express.raw({ type: "*/*", limit: "50mb" }));
 
 app.use(healthRouter);
 
-app.use("/openai", openaiRouter);
+app.use("/openai/v1", openaiRouter);
 app.use("/anthropic", anthropicRouter);
 app.use("/gemini", geminiRouter);
 app.use("/openrouter", openrouterRouter);

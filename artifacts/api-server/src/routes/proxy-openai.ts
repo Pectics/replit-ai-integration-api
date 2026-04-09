@@ -7,11 +7,11 @@ const router: IRouter = Router();
 const NOT_SUPPORTED =
   "This capability is not available through Replit AI Integrations for OpenAI. See /info for supported endpoints.";
 
-router.get("/v1/models", (_req: Request, res: Response): void => {
+router.get("/models", (_req: Request, res: Response): void => {
   res.json({ object: "list", data: OPENAI_MODELS });
 });
 
-router.get("/v1/models/:modelId", (req: Request, res: Response): void => {
+router.get("/models/:modelId", (req: Request, res: Response): void => {
   const modelId = String(req.params.modelId);
   const model = findOpenAIModel(modelId);
   if (!model) {
@@ -23,25 +23,25 @@ router.get("/v1/models/:modelId", (req: Request, res: Response): void => {
 
 router.use(requireProxyAuth);
 
-router.post("/v1/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
-router.post("/v1/audio/speech", notImplemented(`${NOT_SUPPORTED} (TTS / speech output is not supported)`));
-router.post("/v1/audio/translations", notImplemented(`${NOT_SUPPORTED} (audio translations are not supported)`));
-router.post("/v1/images/variations", notImplemented(`${NOT_SUPPORTED} (image variations are not supported)`));
-router.post("/v1/moderations", notImplemented(`${NOT_SUPPORTED} (moderations are not supported)`));
+router.post("/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
+router.post("/audio/speech", notImplemented(`${NOT_SUPPORTED} (TTS / speech output is not supported)`));
+router.post("/audio/translations", notImplemented(`${NOT_SUPPORTED} (audio translations are not supported)`));
+router.post("/images/variations", notImplemented(`${NOT_SUPPORTED} (image variations are not supported)`));
+router.post("/moderations", notImplemented(`${NOT_SUPPORTED} (moderations are not supported)`));
 
-router.all(/^\/v1\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
-router.all(/^\/v1\/fine_tuning(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
-router.all(/^\/v1\/batches(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
-router.all(/^\/v1\/assistants(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Assistants API is not supported)`));
-router.all(/^\/v1\/threads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
-router.all(/^\/v1\/vector_stores(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Vector Stores API is not supported)`));
-router.all(/^\/v1\/uploads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (uploads API is not supported)`));
+router.all(/^\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all(/^\/fine_tuning(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (fine-tuning is not supported)`));
+router.all(/^\/batches(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Batch API is not supported)`));
+router.all(/^\/assistants(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Assistants API is not supported)`));
+router.all(/^\/threads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Threads API is not supported)`));
+router.all(/^\/vector_stores(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Vector Stores API is not supported)`));
+router.all(/^\/uploads(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (uploads API is not supported)`));
 
-router.post("/v1/chat/completions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
-router.post("/v1/completions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
-router.post("/v1/responses", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
-router.post("/v1/audio/transcriptions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
-router.post("/v1/images/generations", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/chat/completions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/completions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/responses", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/audio/transcriptions", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
+router.post("/images/generations", (req: Request, res: Response) => proxyRequest(req, res, "openai"));
 
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "openai"));
 
