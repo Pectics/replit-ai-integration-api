@@ -39,6 +39,6 @@ app.use(healthRouter);
 app.use("/openai/v1", openaiRouter);
 app.use("/anthropic", anthropicRouter);
 app.use(["/gemini/v1", "/gemini/v1beta"], geminiRouter);
-app.use("/openrouter", openrouterRouter);
+app.use("/openrouter/api/v1", openrouterRouter);
 
 export default app;
