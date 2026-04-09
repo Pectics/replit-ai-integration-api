@@ -9,11 +9,11 @@ const NOT_SUPPORTED =
 
 const BLOCKED_ACTIONS = new Set(["embedContent", "batchEmbedContents", "generateAnswer", "generateAnswerStream"]);
 
-router.get("/v1/models", (_req: Request, res: Response): void => {
+router.get("/models", (_req: Request, res: Response): void => {
   res.json({ models: GEMINI_MODELS });
 });
 
-router.get(/^\/v1\/models\/(.+)$/, (req: Request, res: Response): void => {
+router.get(/^\/models\/(.+)$/, (req: Request, res: Response): void => {
   const rawId = String(req.params[0]);
   const model = findGeminiModel(rawId);
   if (!model) {
@@ -25,7 +25,7 @@ router.get(/^\/v1\/models\/(.+)$/, (req: Request, res: Response): void => {
 
 router.use(requireProxyAuth);
 
-router.post("/v1/models/:modelAndAction", (req: Request, res: Response) => {
+router.post("/models/:modelAndAction", (req: Request, res: Response) => {
   const modelAndAction = String(req.params.modelAndAction);
   const colonIdx = modelAndAction.lastIndexOf(":");
   const action = colonIdx >= 0 ? modelAndAction.slice(colonIdx + 1) : "";
@@ -42,9 +42,9 @@ router.post("/v1/models/:modelAndAction", (req: Request, res: Response) => {
   return proxyRequest(req, res, "gemini");
 });
 
-router.all(/^\/v1\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
-router.all(/^\/v1\/tunedModels(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (fine-tuning / tuned models are not supported)`));
-router.all(/^\/v1\/cachedContents(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (context caching is not supported)`));
+router.all(/^\/files(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (Files API is not supported)`));
+router.all(/^\/tunedModels(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (fine-tuning / tuned models are not supported)`));
+router.all(/^\/cachedContents(\/.*)?$/, notImplemented(`${NOT_SUPPORTED} (context caching is not supported)`));
 
 router.all(/(.*)/, (req: Request, res: Response) => proxyRequest(req, res, "gemini"));
 
