@@ -111,25 +111,6 @@ export async function probeAndProxy(
   try {
     const upstream = await fetch(upstreamUrl, { method, headers: upstreamHeaders, body: bodyBuffer });
 
-    if (upstream.status === 404) {
-      res.status(501).json({ error: "Not Implemented", message: notSupportedMessage });
-      return;
-    }
-
-    if (upstream.status === 400) {
-      const text = await upstream.text();
-      if (text.includes("INVALID_ENDPOINT")) {
-        res.status(501).json({ error: "Not Implemented", message: notSupportedMessage });
-        return;
-      }
-      res.status(400);
-      for (const [key, value] of upstream.headers.entries()) {
-        if (!HOP_BY_HOP.has(key.toLowerCase())) res.setHeader(key, value);
-      }
-      res.end(text);
-      return;
-    }
-
     res.status(upstream.status);
     for (const [key, value] of upstream.headers.entries()) {
       if (!HOP_BY_HOP.has(key.toLowerCase())) {
