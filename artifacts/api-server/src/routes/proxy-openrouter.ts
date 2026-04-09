@@ -1,15 +1,24 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { requireProxyAuth, notImplemented, proxyRequest, probeAndProxy } from "./proxy";
+import { requireProxyAuth, notImplemented, proxyRequest } from "./proxy";
 
 const router: IRouter = Router();
-router.use(requireProxyAuth);
 
 const NOT_SUPPORTED =
   "This capability is not available through Replit AI Integrations for OpenRouter. See /info for supported endpoints.";
 
-router.get("/models", (req: Request, res: Response) =>
-  probeAndProxy(req, res, "openrouter", `${NOT_SUPPORTED} (GET /models is not supported by this integration)`),
-);
+router.get("/models", async (_req: Request, res: Response) => {
+  try {
+    const upstream = await fetch("https://openrouter.ai/api/v1/models", {
+      headers: { "accept": "application/json" },
+    });
+    const data = await upstream.json();
+    res.status(upstream.status).json(data);
+  } catch (err) {
+    res.status(502).json({ error: "Bad gateway: failed to fetch models from OpenRouter" });
+  }
+});
+
+router.use(requireProxyAuth);
 
 router.post("/completions", notImplemented(`${NOT_SUPPORTED} (legacy text completions are not supported; use /chat/completions)`));
 router.post("/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
