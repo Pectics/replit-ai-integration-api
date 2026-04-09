@@ -2,7 +2,6 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { requireProxyAuth, notImplemented, proxyRequest, probeAndProxy } from "./proxy";
 
 const router: IRouter = Router();
-router.use(requireProxyAuth);
 
 const NOT_SUPPORTED =
   "This capability is not available through Replit AI Integrations for OpenRouter. See /info for supported endpoints.";
@@ -10,6 +9,8 @@ const NOT_SUPPORTED =
 router.get("/models", (req: Request, res: Response) =>
   probeAndProxy(req, res, "openrouter", `${NOT_SUPPORTED} (GET /models is not supported by this integration)`),
 );
+
+router.use(requireProxyAuth);
 
 router.post("/completions", notImplemented(`${NOT_SUPPORTED} (legacy text completions are not supported; use /chat/completions)`));
 router.post("/embeddings", notImplemented(`${NOT_SUPPORTED} (embeddings are not supported)`));
